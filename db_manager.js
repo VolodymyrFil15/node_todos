@@ -17,7 +17,7 @@ function DBManager(db_name){
 DBManager.prototype.get_lists = function (){
     let db = new sqlite3.Database(this.db_name, sqlite3.READ_ONLY);
     return new Promise(function (resolve, reject) {
-        db.all("SELECT pk,* FROM `lists` WHERE 1;", function(err, row) {
+        db.all("SELECT pk,name FROM `lists` WHERE 1;", function(err, row) {
             if(err != null){
                 reject(err);
                 db.close();
@@ -33,7 +33,7 @@ DBManager.prototype.get_lists = function (){
 DBManager.prototype.get_todo = function (pk){
     let db = new sqlite3.Database(this.db_name, sqlite3.READ_ONLY);
     return new Promise(function (resolve, reject) {
-        db.get("SELECT task, done, note FROM `todos` WHERE pk='" + pk + "';", function(err, row) {
+        db.get("SELECT pk, task, done, note, list_pk FROM `todos` WHERE pk='" + pk + "';", function(err, row) {
             if(err != null){
                 reject(err);
                 db.close();
@@ -86,6 +86,9 @@ DBManager.prototype.update_list = function (list_pk, name) {
 
 
 DBManager.prototype.update_todo = function (todo_pk, task="", done="") {
+    if (!task && ! done){
+        return
+    }
     let db = new sqlite3.Database(this.db_name);
 
     let query = "UPDATE `todos` SET ";
@@ -95,8 +98,8 @@ DBManager.prototype.update_todo = function (todo_pk, task="", done="") {
     if (done){
         query += "`done`='" + done + "'";
     }
-    query += " WHERE `pk`='1';";
-
+    query += " WHERE `pk`='" + todo_pk + "';";
+    console.log(query);
     db.run(query);
     db.close();
 };

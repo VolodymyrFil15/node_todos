@@ -34,6 +34,7 @@
 
     <button ng-click="update_todo()">Update</button>
     <button ng-click="remove_todo()">Remove</button>
+
     <a href="/">Cancel</a>
 </script>
 
@@ -58,12 +59,12 @@
                     return $http.get('/lists/' + param);
                 },
                 getTodo: function(param){
-                    return $http.get('/lists/l/todos/' + param);
+                    return $http.get('/lists/todos/' + param);
                 },
             };
         }])
 
-        .controller('TodoController', ['$scope','$http', 'Todos', '$routeParams', function ($scope, $http, Todos, $routeParams) {
+        .controller('TodoController', ['$scope', '$http', 'Todos', '$routeParams', function ($scope, $http, Todos, $routeParams) {
             Todos.getTodos($routeParams.id)
                 .then(function(data){
                     $scope.todos = data.data;
@@ -72,14 +73,9 @@
             $scope.save = function(){
                 if(!$scope.newTodo || $scope.newTodo.length < 1) return;
                 var todo = { task: $scope.newTodo, done: "0" }
-
                 $scope.todos.push(todo);
                 $http.post("/lists/" + $routeParams.id + "/", {task:$scope.newTodo});
-                // var todo = new Todos({ name: $scope.newTodo, completed: false });
-                // todo.$save(function(){
-                //     $scope.todos.push(todo);
-                //     $scope.newTodo = ''; // clear textbox
-                // });
+                $scope.newTodo = '';
             }
         }])
 
@@ -89,20 +85,22 @@
             })
         }])
 
-        .controller('TodoDetailCtrl', ['$scope', '$routeParams', 'Todos', '$location', function ($scope, $routeParams, Todos, $location) {
+        .controller('TodoDetailCtrl', ['$scope', '$http', '$routeParams', 'Todos', '$location', function ($scope, $http, $routeParams, Todos, $location) {
             Todos.getTodo($routeParams.id)
                 .then(function(data){
                     $scope.todo = data.data;
-                    console.log($scope.todo);
                 })
 
-            $scope.remove = function(){
-                Todos.remove({id: $scope.todo._id}, function(){
-                    $location.url('/');
-                });
+            $scope.remove_todo = function(){
+                $http.delete("/lists/todos/" + $scope.todo.pk);
+                $location.url('/' + $scope.todo.list_pk);
+                console.log();
+            }
+
+            $scope.update_todo = function(){
+                $http.put("/lists/todos/" + $scope.todo.pk);
             }
         }])
-
 
         .config(['$routeProvider', function ($routeProvider) {
             $routeProvider

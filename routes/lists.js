@@ -40,13 +40,13 @@ router.put('/:pk', function(req, res, next) {
 });
 
 // update todo_ by it's pk
-router.put('/l/todos/:pk', function (req, res, next) {
+router.put('/todos/:pk', function (req, res, next) {
     db_manager.update_todo(req.params.pk, req.body.task, req.body.done)
     res.json({'success':true});
 });
 
 // get todo_ information
-router.get('/l/todos/:pk', function (req, res, next) {
+router.get('/todos/:pk', function (req, res, next) {
     db_manager.get_todo(req.params.pk).then(function(data) {
         res.json(data);
     }).catch(function () {
@@ -55,7 +55,7 @@ router.get('/l/todos/:pk', function (req, res, next) {
 });
 
 // delete todo_
-router.delete('/l/todos/:pk',function (req, res, next) {
+router.delete('/todos/:pk',function (req, res, next) {
     db_manager.delete_todo(req.params.pk);
     res.json({'success':true});
 });
