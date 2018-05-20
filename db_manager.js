@@ -8,7 +8,7 @@ function DBManager(db_name){
     db.serialize(function() {
         this.run("CREATE TABLE IF NOT EXISTS `lists` (`pk` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `name` TEXT);");
         // use text to store boolean done field (angularjs cant bind integer to checkbox ng-model)
-        this.run("CREATE TABLE IF NOT EXISTS `todos` (`pk` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `task` TEXT, `done` TEXT, `list_pk` INTEGER NOT NULL);");
+        this.run("CREATE TABLE IF NOT EXISTS `todos` (`pk` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `task` TEXT, `done` TEXT, `note` TEXT `list_pk` INTEGER NOT NULL);");
     });
     db.close();
 }
@@ -28,6 +28,24 @@ DBManager.prototype.get_lists = function (){
         });
     });
 };
+
+
+DBManager.prototype.get_todo = function (pk){
+    let db = new sqlite3.Database(this.db_name, sqlite3.READ_ONLY);
+    return new Promise(function (resolve, reject) {
+        db.all("SELECT task, done, note FROM `todos` WHERE pk='" + pk + "';", function(err, row) {
+            if(err != null){
+                reject(err);
+                console.log(err);
+                db.close();
+            } else {
+                resolve(row);
+                db.close();
+            }
+        });
+    });
+};
+
 
 
 DBManager.prototype.add_list = function (name) {

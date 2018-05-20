@@ -45,6 +45,15 @@ router.put('/l/todos/:pk', function (req, res, next) {
     res.json({'success':true});
 });
 
+// get todo_ information
+router.get('/l/todos/:pk', function (req, res, next) {
+    db_manager.get_todo(req.params.pk).then(function(data) {
+        res.json(data);
+    }).catch(function () {
+        res.json({"error":""})
+    });
+});
+
 // delete todo_
 router.delete('/l/todos/:pk',function (req, res, next) {
     db_manager.delete_todo(req.params.pk);
