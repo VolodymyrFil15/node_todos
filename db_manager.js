@@ -2,7 +2,7 @@ var sqlite3 = require('sqlite3').verbose();
 
 
 function DBManager(db_name){
-    console.log("initing db");
+    console.log("init db");
     this.db_name = db_name;
     let db = new sqlite3.Database(db_name);
     db.serialize(function() {
