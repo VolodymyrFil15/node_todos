@@ -33,10 +33,9 @@ DBManager.prototype.get_lists = function (){
 DBManager.prototype.get_todo = function (pk){
     let db = new sqlite3.Database(this.db_name, sqlite3.READ_ONLY);
     return new Promise(function (resolve, reject) {
-        db.all("SELECT task, done, note FROM `todos` WHERE pk='" + pk + "';", function(err, row) {
+        db.get("SELECT task, done, note FROM `todos` WHERE pk='" + pk + "';", function(err, row) {
             if(err != null){
                 reject(err);
-                console.log(err);
                 db.close();
             } else {
                 resolve(row);

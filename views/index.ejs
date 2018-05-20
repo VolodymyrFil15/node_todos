@@ -20,12 +20,23 @@
     <ul>
         <li ng-repeat="todo in todos | filter: search">
             <input type="checkbox" ng-model="todo.done" ng-true-value='1' ng-false-value='0'>
-            {{todo.task}}
+            <a ng-show="!editing[$index]" href="#todo/{{todo.pk}}">{{todo.task}}</a>
         </li>
     </ul>
-    <!--New task <input type="text" ng-model="newTodo"><button ng-click="save()">Create</button>-->
-
+    New task <input type="text" ng-model="newTodo"><button ng-click="save()">Create</button>
 </script>
+
+<script type="text/ng-template" id="/todoDetails.html">
+    <h1>{{ todo.task }}</h1>
+
+    done: <input type="checkbox" ng-model="todo.done" ng-true-value='1' ng-false-value='0'><br>
+    note: <textarea ng-model="todo.note"></textarea><br><br>
+
+    <button ng-click="update_todo()">Update</button>
+    <button ng-click="remove_todo()">Remove</button>
+    <a href="/">Cancel</a>
+</script>
+
 
 <script type="text/ng-template" id="/lists.html">
     Search: <input type="text" ng-model="search.name">
@@ -45,15 +56,31 @@
             return {
                 getTodos: function(param){
                     return $http.get('/lists/' + param);
-                }
+                },
+                getTodo: function(param){
+                    return $http.get('/lists/l/todos/' + param);
+                },
             };
         }])
 
-        .controller('TodoController', ['$scope', 'Todos', '$routeParams', function ($scope, Todos, $routeParams) {
+        .controller('TodoController', ['$scope','$http', 'Todos', '$routeParams', function ($scope, $http, Todos, $routeParams) {
             Todos.getTodos($routeParams.id)
                 .then(function(data){
                     $scope.todos = data.data;
                 })
+
+            $scope.save = function(){
+                if(!$scope.newTodo || $scope.newTodo.length < 1) return;
+                var todo = { task: $scope.newTodo, done: "0" }
+
+                $scope.todos.push(todo);
+                $http.post("/lists/" + $routeParams.id + "/", {task:$scope.newTodo});
+                // var todo = new Todos({ name: $scope.newTodo, completed: false });
+                // todo.$save(function(){
+                //     $scope.todos.push(todo);
+                //     $scope.newTodo = ''; // clear textbox
+                // });
+            }
         }])
 
         .controller('ListController', ['$scope', 'Lists', function ($scope, Lists) {
@@ -62,17 +89,36 @@
             })
         }])
 
+        .controller('TodoDetailCtrl', ['$scope', '$routeParams', 'Todos', '$location', function ($scope, $routeParams, Todos, $location) {
+            Todos.getTodo($routeParams.id)
+                .then(function(data){
+                    $scope.todo = data.data;
+                    console.log($scope.todo);
+                })
+
+            $scope.remove = function(){
+                Todos.remove({id: $scope.todo._id}, function(){
+                    $location.url('/');
+                });
+            }
+        }])
+
+
         .config(['$routeProvider', function ($routeProvider) {
             $routeProvider
                 .when('/', {
                     templateUrl: '/lists.html',
                     controller: 'ListController'
                 })
-
                 .when('/:id', {
                     templateUrl: '/todos.html',
                     controller: 'TodoController'
                 })
+
+                .when('/todo/:id', {
+                    templateUrl: '/todoDetails.html',
+                    controller: 'TodoDetailCtrl'
+                });
         }]);
 </script>
 </body>
