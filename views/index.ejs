@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html ng-app="app">
+<head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+</head>
+<body>
+<h1><%= title %></h1>
+
+<ng-view></ng-view>
+
+<!-- Libraries -->
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular-route.min.js"></script>
+
+<!-- Template -->
+<script type="text/ng-template" id="/todos.html">
+    <a href="/">Back to lists</a><br><br>
+    Search: <input type="text" ng-model="search.task">
+    <ul>
+        <li ng-repeat="todo in todos | filter: search">
+            <input type="checkbox" ng-model="todo.done" ng-true-value='1' ng-false-value='0'>
+            {{todo.task}} {{todo.done}}
+        </li>
+    </ul>
+    <!--New task <input type="text" ng-model="newTodo"><button ng-click="save()">Create</button>-->
+
+</script>
+
+<script type="text/ng-template" id="/lists.html">
+    Search: <input type="text" ng-model="search.name">
+    <div ng-repeat="list in lists | filter: search">
+        <a href="#/{{list.pk}}">{{list.name}}</a>
+    </div>
+</script>
+
+<script>
+    angular.module('app', ['ngRoute'])
+
+        .factory('Lists', ['$http', function ($http) {
+            return $http.get('/lists');
+        }])
+
+        .factory('Todos', ['$http', '$routeParams', function ($http, $routeParams) {
+            return {
+                getTodos: function(param){
+                    return $http.get('/lists/' + param);
+                }
+            };
+        }])
+
+        .controller('TodoController', ['$scope', 'Todos', '$routeParams', function ($scope, Todos, $routeParams) {
+            Todos.getTodos($routeParams.id)
+                .then(function(data){
+                    $scope.todos = data.data;
+                })
+        }])
+
+        .controller('ListController', ['$scope', 'Lists', function ($scope, Lists) {
+            Lists.success(function (data) {
+                $scope.lists = data;
+            })
+        }])
+
+        .config(['$routeProvider', function ($routeProvider) {
+            $routeProvider
+                .when('/', {
+                    templateUrl: '/lists.html',
+                    controller: 'ListController'
+                })
+
+                .when('/:id', {
+                    templateUrl: '/todos.html',
+                    controller: 'TodoController'
+                })
+        }]);
+</script>
+</body>
+</html>
