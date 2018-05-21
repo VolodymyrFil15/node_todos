@@ -1,6 +1,6 @@
-var express = require('express');
-var router = express.Router();
-var db_manager = require("../db_manager");
+let express = require('express');
+let router = express.Router();
+let db_manager = require("../db_manager");
 
 // Get all lists
 router.get('/', function(req, res, next) {
