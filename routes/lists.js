@@ -13,8 +13,11 @@ router.get('/', function(req, res, next) {
 
 // Create list
 router.post('/', function(req, res, next) {
-    db_manager.add_list(req.body.name);
-    res.json({'success':true});
+    db_manager.add_list(req.body.name).then(function(data) {
+        res.json(data);
+    }).catch(function () {
+        res.json({"error":""})
+    });
 });
 
 // Get list's todos

@@ -25,9 +25,10 @@
         </li>
     </ul>
     New task <input type="text" ng-model="newTodo"><button ng-click="save()">Create</button><br><br>
-    rename list: <input type="text" ng-model='list.name' ng-model-options="{debounce:1000}" ng-change="update_list()"><br><br>
-
+    rename list: <input type="text" ng-model='list.name' ng-model-options="{debounce:1000}" ng-minlength="3" ng-change="update_list()"><br><br>
+    <button ng-click="delete_list()">Delete list</button>
 </script>
+
 
 <script type="text/ng-template" id="/todoDetails.html">
     <h1>{{ todo.task }}</h1>
@@ -47,6 +48,8 @@
     <div ng-repeat="list in lists | filter: search">
         <a href="#/{{list.pk}}">{{list.name}}</a>
     </div>
+    <br><br>
+    New list <input type="text" ng-model="newList"><button ng-click="add_list()">Create List</button><br><br>
 </script>
 
 <script>
@@ -74,7 +77,8 @@
             };
         }])
 
-        .controller('TodoController', ['$scope', '$http', 'Todos', 'Lists', '$routeParams', function ($scope, $http, Todos, Lists, $routeParams) {
+        .controller('TodoController', ['$scope', '$http', 'Todos', 'Lists', '$location', '$routeParams', function (
+            $scope, $http, Todos, Lists, $location, $routeParams) {
             Todos.getTodos($routeParams.id)
                 .then(function(data){
                     $scope.todos = data.data;
@@ -98,21 +102,27 @@
             $scope.update_list = function(){
                 $http.put("/lists/" + $scope.list.pk, {name:$scope.list.name});
             }
-            //
-            // $scope.delete_list = function(){
-            //     $http.put("/lists/" + $scope.list.pk, {name:$scope.list.name});
-            // }
+
+            $scope.delete_list = function(){
+                $http.delete("/lists/" + $scope.list.pk);
+                $location.url('/');
+            }
         }])
 
-        .controller('ListController', ['$scope', 'Lists', function ($scope, Lists) {
+        .controller('ListController', ['$scope', 'Lists', '$http', function ($scope, Lists, $http) {
             Lists.getLists()
                 .then(function(data){
                     $scope.lists = data.data;
                 })
-
+            $scope.add_list = function(name){
+                $http.post("/lists/", {name:$scope.newList}).then(function(data){
+                    $scope.lists.push(data.data);
+                });
+            }
         }])
 
-        .controller('TodoDetailCtrl', ['$scope', '$http', '$routeParams', 'Todos', '$location', function ($scope, $http, $routeParams, Todos, $location) {
+        .controller('TodoDetailCtrl', ['$scope', '$http', '$routeParams', 'Todos', '$location', function (
+            $scope, $http, $routeParams, Todos, $location) {
             Todos.getTodo($routeParams.id)
                 .then(function(data){
                     $scope.todo = data.data;

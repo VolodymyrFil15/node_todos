@@ -1,4 +1,4 @@
-var sqlite3 = require('sqlite3').verbose();
+let sqlite3 = require('sqlite3').verbose();
 
 
 function DBManager(db_name){
@@ -46,11 +46,20 @@ DBManager.prototype.get_todo = function (pk){
 };
 
 
-
 DBManager.prototype.add_list = function (name) {
-    let db = new sqlite3.Database(this.db_name);
-    db.run("INSERT INTO `lists`(`name`) VALUES ('" + name + "');");
-    db.close();
+    let db = new sqlite3.Database(this.db_name, sqlite3.READ_ONLY);
+    return new Promise(function (resolve, reject) {
+        db.run("INSERT INTO `lists`(`name`) VALUES ('" + name + "');");
+        db.get("SELECT max(pk) as pk, name FROM `lists` where `name`='" + name + "';", function(err, row) {
+            if(err != null){
+                reject(err);
+                db.close();
+            } else {
+                resolve(row);
+                db.close();
+            }
+        });
+    });
 };
 
 
@@ -94,6 +103,9 @@ DBManager.prototype.add_todo = function (list_pk, task) {
 
 
 DBManager.prototype.update_list = function (list_pk, name) {
+    if (!name){
+        return;
+    }
     let db = new sqlite3.Database(this.db_name);
     db.run("UPDATE `lists` SET `name`='" + name + "' WHERE `pk`='" + list_pk + "';");
     db.close();
