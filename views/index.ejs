@@ -19,7 +19,7 @@
     Search: <input type="text" ng-model="search.task">
     <ul>
         <li ng-repeat="todo in todos | filter: search">
-            <input type="checkbox" ng-model="todo.done" ng-true-value='1' ng-false-value='0'>
+            <input type="checkbox" ng-model="todo.done" ng-true-value='1' ng-false-value='0' ng-change="update_todo({{todo.pk}}, ng-value)")>
             <a ng-show="!editing[$index]" href="#todo/{{todo.pk}}">{{todo.task}}</a>
         </li>
     </ul>
@@ -27,6 +27,7 @@
 </script>
 
 <script type="text/ng-template" id="/todoDetails.html">
+    <a href="/#/{{todo.list_pk}}">Back to list</a>
     <h1>{{ todo.task }}</h1>
 
     done: <input type="checkbox" ng-model="todo.done" ng-true-value='1' ng-false-value='0'><br>
@@ -77,6 +78,13 @@
                 $http.post("/lists/" + $routeParams.id + "/", {task:$scope.newTodo});
                 $scope.newTodo = '';
             }
+
+            $scope.update_todo = function(pk, done){
+
+                console.log($scope.todos);
+                console.log($scope.todos.find(x => x.pk === pk).done);
+                $http.put("/lists/todos/" + pk + "/", {done: $scope.todos.find(x => x.pk === pk).done});
+            }
         }])
 
         .controller('ListController', ['$scope', 'Lists', function ($scope, Lists) {
@@ -98,7 +106,7 @@
             }
 
             $scope.update_todo = function(){
-                $http.put("/lists/todos/" + $scope.todo.pk);
+                $http.put("/lists/todos/" + $scope.todo.pk, {done: $scope.todo.done, note: $scope.todo.note});
             }
         }])
 

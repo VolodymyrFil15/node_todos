@@ -41,7 +41,7 @@ router.put('/:pk', function(req, res, next) {
 
 // update todo_ by it's pk
 router.put('/todos/:pk', function (req, res, next) {
-    db_manager.update_todo(req.params.pk, req.body.task, req.body.done)
+    db_manager.update_todo(req.params.pk, req.body.task, req.body.done, req.body.note);
     res.json({'success':true});
 });
 

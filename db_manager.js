@@ -85,21 +85,23 @@ DBManager.prototype.update_list = function (list_pk, name) {
 };
 
 
-DBManager.prototype.update_todo = function (todo_pk, task="", done="") {
-    if (!task && ! done){
+DBManager.prototype.update_todo = function (todo_pk, task="", done="", note="") {
+    if (!task && !done && !note){
         return
     }
     let db = new sqlite3.Database(this.db_name);
 
     let query = "UPDATE `todos` SET ";
     if (task){
-        query += "`task`='" + task + "'";
+        query += "`task`='" + task + "', ";
     }
     if (done){
-        query += "`done`='" + done + "'";
+        query += "`done`='" + done + "', ";
     }
-    query += " WHERE `pk`='" + todo_pk + "';";
-    console.log(query);
+    if (note){
+        query += "`note`='" + note + "', ";
+    }
+    query = query.slice(0,-2) + " WHERE `pk`='" + todo_pk + "';";
     db.run(query);
     db.close();
 };
