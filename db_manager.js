@@ -70,6 +70,21 @@ DBManager.prototype.get_list_todos = function(list_pk){
     });
 };
 
+DBManager.prototype.get_list_detail = function(list_pk){
+    let db = new sqlite3.Database(this.db_name);
+
+    return new Promise(function (resolve, reject) {
+        db.get("SELECT * FROM `lists` WHERE pk='" + list_pk + "';", function(err, row) {
+            if(err != null){
+                reject(err);
+                db.close();
+            } else {
+                resolve(row);
+                db.close();
+            }
+        });
+    });
+};
 
 DBManager.prototype.add_todo = function (list_pk, task) {
     let db = new sqlite3.Database(this.db_name);
@@ -86,16 +101,17 @@ DBManager.prototype.update_list = function (list_pk, name) {
 
 
 DBManager.prototype.update_todo = function (todo_pk, task="", done="", note="") {
-    if (!task && !done && !note){
+    if (!task && done === "" && !note){
         return
     }
+
     let db = new sqlite3.Database(this.db_name);
 
     let query = "UPDATE `todos` SET ";
     if (task){
         query += "`task`='" + task + "', ";
     }
-    if (done){
+    if (done !== ""){
         query += "`done`='" + done + "', ";
     }
     if (note){
@@ -120,7 +136,6 @@ DBManager.prototype.delete_list = function (list_pk){
     db.run("DELETE FROM `todos` WHERE `list_pk`='" + list_pk + "';");
     db.close();
 };
-
 
 
 var q = new DBManager("db.db");

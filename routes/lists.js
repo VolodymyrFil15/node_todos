@@ -26,6 +26,15 @@ router.get('/:pk', function(req, res, next) {
     });
 });
 
+// Get list's detail
+router.get('/:pk/detail/', function(req, res, next) {
+    db_manager.get_list_detail(req.params.pk).then(function(data) {
+        res.json(data);
+    }).catch(function () {
+        res.json({"error":""})
+    });
+});
+
 // create new todo_
 router.post('/:pk', function(req, res, next) {
     db_manager.add_todo(req.params.pk, req.body.task);

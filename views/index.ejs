@@ -9,34 +9,36 @@
 
 <ng-view></ng-view>
 
-<!-- Libraries -->
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular-route.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.1/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.1/angular-route.min.js"></script>
 
-<!-- Template -->
 <script type="text/ng-template" id="/todos.html">
+    <h3>List: {{list.name}}</h3>
     <a href="/">Back to lists</a><br><br>
     Search: <input type="text" ng-model="search.task">
     <ul>
         <li ng-repeat="todo in todos | filter: search">
-            <input type="checkbox" ng-model="todo.done" ng-true-value='1' ng-false-value='0' ng-change="update_todo({{todo.pk}}, ng-value)")>
+            <input type="checkbox" ng-model="todo.done" ng-true-value=1
+                   ng-false-value=0
+                   ng-change="update_todo_done({{todo.pk}}, ng-value)")>
             <a ng-show="!editing[$index]" href="#todo/{{todo.pk}}">{{todo.task}}</a>
         </li>
     </ul>
-    New task <input type="text" ng-model="newTodo"><button ng-click="save()">Create</button>
+    New task <input type="text" ng-model="newTodo"><button ng-click="save()">Create</button><br><br>
+    rename list: <input type="text" ng-model='list.name' ng-model-options="{debounce:1000}" ng-change="update_list()"><br><br>
+
 </script>
 
 <script type="text/ng-template" id="/todoDetails.html">
-    <a href="/#/{{todo.list_pk}}">Back to list</a>
     <h1>{{ todo.task }}</h1>
 
-    done: <input type="checkbox" ng-model="todo.done" ng-true-value='1' ng-false-value='0'><br>
-    note: <textarea ng-model="todo.note"></textarea><br><br>
+    task name: <input type="text" ng-model="todo.task" ng-change="update_todo()" ng-model-options="{debounce:1000}"><br><br>
+    done: <input type="checkbox" ng-model="todo.done" ng-true-value=1 ng-false-value=0 ng-change="update_todo()"><br>
+    note: <textarea ng-model="todo.note" ng-change="update_todo()" ng-model-options="{debounce:1000}"></textarea><br><br>
 
-    <button ng-click="update_todo()">Update</button>
-    <button ng-click="remove_todo()">Remove</button>
+    <button ng-click="remove_todo()">Delete Todo</button>
 
-    <a href="/">Cancel</a>
+    <a href="/#/{{todo.list_pk}}">Cancel</a>
 </script>
 
 
@@ -51,10 +53,17 @@
     angular.module('app', ['ngRoute'])
 
         .factory('Lists', ['$http', function ($http) {
-            return $http.get('/lists');
+            return {
+                getLists: function () {
+                    return $http.get('/lists');
+                },
+                getList: function (pk) {
+                    return $http.get('/lists/' + pk + "/detail/");
+                }
+            }
         }])
 
-        .factory('Todos', ['$http', '$routeParams', function ($http, $routeParams) {
+        .factory('Todos', ['$http', function ($http) {
             return {
                 getTodos: function(param){
                     return $http.get('/lists/' + param);
@@ -65,10 +74,13 @@
             };
         }])
 
-        .controller('TodoController', ['$scope', '$http', 'Todos', '$routeParams', function ($scope, $http, Todos, $routeParams) {
+        .controller('TodoController', ['$scope', '$http', 'Todos', 'Lists', '$routeParams', function ($scope, $http, Todos, Lists, $routeParams) {
             Todos.getTodos($routeParams.id)
                 .then(function(data){
                     $scope.todos = data.data;
+                    Lists.getList($routeParams.id).then(function (data) {
+                        $scope.list = data.data;
+                    })
                 })
 
             $scope.save = function(){
@@ -79,18 +91,25 @@
                 $scope.newTodo = '';
             }
 
-            $scope.update_todo = function(pk, done){
-
-                console.log($scope.todos);
-                console.log($scope.todos.find(x => x.pk === pk).done);
+            $scope.update_todo_done = function(pk, done){
                 $http.put("/lists/todos/" + pk + "/", {done: $scope.todos.find(x => x.pk === pk).done});
             }
+
+            $scope.update_list = function(){
+                $http.put("/lists/" + $scope.list.pk, {name:$scope.list.name});
+            }
+            //
+            // $scope.delete_list = function(){
+            //     $http.put("/lists/" + $scope.list.pk, {name:$scope.list.name});
+            // }
         }])
 
         .controller('ListController', ['$scope', 'Lists', function ($scope, Lists) {
-            Lists.success(function (data) {
-                $scope.lists = data;
-            })
+            Lists.getLists()
+                .then(function(data){
+                    $scope.lists = data.data;
+                })
+
         }])
 
         .controller('TodoDetailCtrl', ['$scope', '$http', '$routeParams', 'Todos', '$location', function ($scope, $http, $routeParams, Todos, $location) {
@@ -106,7 +125,7 @@
             }
 
             $scope.update_todo = function(){
-                $http.put("/lists/todos/" + $scope.todo.pk, {done: $scope.todo.done, note: $scope.todo.note});
+                $http.put("/lists/todos/" + $scope.todo.pk, {done: $scope.todo.done, note: $scope.todo.note, task:$scope.todo.task});
             }
         }])
 
